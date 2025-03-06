@@ -1,0 +1,38 @@
+---
+title: "UMCarpReport"
+output: html_document
+date: "2025-03-06"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r packages}
+
+library(tidyverse)
+
+```
+
+##Introduction
+
+This report was prepared to the attention of the United Nations. It analyzes the relationship between a country's GDP, its life expectancy and CO2 emissions. Our goal is to determine to what degree a country’s economic strength or weakness may be related to its public health status and impact on climate pollution. We hypothesize that both life expectancy and CO2 emissions increase with a country's GDP.
+
+```{r DataRead}
+
+gapminder_1997 <- read_csv("data/gapminder_1997.csv")
+
+```
+
+```{r gdpLifeExp1997}
+
+ggplot(gapminder_1997)+
+  aes(x = gdpPercap, y = lifeExp, size = pop/1e6)+
+  geom_point()+
+  labs(x = "GDP per Capita", y = "Life Exp",
+       title = "do people in countries with higher GDP live longer",
+       size = "Population in millions") 
+
+```

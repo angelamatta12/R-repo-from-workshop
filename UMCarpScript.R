@@ -4,10 +4,70 @@ install.packages("tidyverse")
 gapminder_1997 <- read_csv("data/gapminder_1997.csv")
 gapminder_data <- read_csv("data/gapminder_data.csv")
 
-# --- summarize the stats --- #
+
+# -- data cleaning stuffs time
+
+newColumnNames <- c("region", "country", "year", "series", "value", "footnotes", "source")
+
+co2Data <- read_csv("data/co2-un-data.csv", skip =2 , col_names =  newColumnNames) %>%
+  select(country, year, series, value) %>% 
+  mutate(series = recode(series,"Emissions (thousand metric tons of carbon dioxide)" = "total emissions",
+                         "Emissions per capita (metric tons of carbon dioxide)" = "per capita emissions")) %>% 
+  
+  pivot_wider(names_from = series, values_from = value) %>%
+  filter(year == 2005) %>%
+  select(-year) %>%
+  mutate(country = recode(country, "United States of America" = "United States",
+                          "Bolivia (Plurin. State of)" = "Bolivia",
+                          "Venezuela (Boliv. Rep. of)" = "Venezuela"))
+
+# recode the column's data to be readable 
+# mutate(series = recode(series,"Emissions (thousand metric tons of carbon dioxide)" = "total emissions",
+# names from -> what you want to make into 2 columns, values_from -> what values do you want in those columns
+#"Emissions per capita (metric tons of carbon dioxide)" = "per capita emissions")) 
+
+# inner join, more SQL stuff but it is in R, lol
+
+mergedData <- inner_join(gapminder_1997, co2Data, by = "country")
+
+#anti join 
+anitMerge <- anti_join(gapminder_1997, co2Data, by = "country") # what they don't have in common for seeing what was left out of join
+
+
+
+mergedData %>% ggplot(aes(x = gdpPercap, y = `per capita emissions`))+
+  geom_point()+
+  labs(x = "GDP per Capita", y = "CO2 per Capita",
+       title = "trend between GDP and CO2")+
+  geom_smooth(method = "lm")
+
+mergedData <- mergedData %>% 
+  mutate(
+    region = if_else(country %in% c( "Canada","United States","Mexico" ), "north","south" )
+  ) %>% 
+  mutate(totalPop = sum(pop),totalEmit = sum(`total emissions`) ,totalEmitPer = `total emissions` / sum(`total emissions`) * 100,
+         popPer = pop / sum(pop) * 100)
+
+mergedData <- mergedData %>% 
+  filter(continent == "Americas")
+
+mergedData %>% 
+group_by(region) %>%
+  summarize(
+    totalPop = sum(pop),totalEmit = sum(`total emissions`) ,totalEmitPer = `total emissions` / sum(`total emissions`) * 100,
+    popPer = pop / sum(pop) * 100
+   ) 
+
+
+  # --- summarize the stats  --- #
 
 #summarize(gapminder_data, avgLifeExp = mean(lifeExp))
-# --- same thing, diff notation --- # 
+# --- same thing, diff notation
+
+#
+
+
+--- # 
 gapminder_data_summarize <- gapminder_data %>% summarize(avgLifeExp = mean(lifeExp), nrows = n())
 
 print(gapminder_data_summarize)
